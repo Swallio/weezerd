@@ -22,9 +22,6 @@
 
         .gradient {
             font-family: "Comic Sans MS", "Comic Sans", cursive;
-            /* Repeat the first color at the end so the animated gradient loops
-               seamlessly without a visible jump. Move the entire gradient across
-               twice its width to ensure the starting and ending frames match. */
             background-image: linear-gradient(
                 var(--angle),
                 red,
@@ -40,17 +37,6 @@
             -webkit-background-clip: text;
             color: transparent;
             animation: gradientMove 3s linear infinite;
-        }
-
-        .letter {
-            display: inline-block;
-            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        .letter:hover {
-            transform: translateY(-10px);
-        }
-        .dragging {
-            cursor: grabbing;
         }
 
         @keyframes gradientMove {
@@ -77,64 +63,6 @@
         </audio>
     </div>
     <script>
-        function splitLetters(el) {
-            const text = el.textContent;
-            el.textContent = '';
-            for (const ch of text) {
-                const span = document.createElement('span');
-                span.className = 'letter';
-                span.textContent = ch;
-                el.appendChild(span);
-            }
-        }
-
-        function makeInteractive(letter) {
-            let startX, startY, currentX, currentY, dragging = false;
-
-            function onMove(e) {
-                if (!dragging) return;
-                const x = (e.clientX || e.touches[0].clientX) - startX;
-                const y = (e.clientY || e.touches[0].clientY) - startY;
-                currentX = x;
-                currentY = y;
-                letter.style.transform = `translate(${x}px, ${y}px)`;
-            }
-
-            function endDrag() {
-                if (!dragging) return;
-                dragging = false;
-                document.removeEventListener('mousemove', onMove);
-                document.removeEventListener('mouseup', endDrag);
-                document.removeEventListener('touchmove', onMove);
-                document.removeEventListener('touchend', endDrag);
-                letter.style.transition = 'transform 0.6s cubic-bezier(0.25, 1.5, 0.5, 1)';
-                letter.style.transform = 'translate(0,0)';
-            }
-
-            letter.addEventListener('mousedown', function(e) {
-                e.preventDefault();
-                dragging = true;
-                startX = e.clientX;
-                startY = e.clientY;
-                letter.style.transition = 'none';
-                document.addEventListener('mousemove', onMove);
-                document.addEventListener('mouseup', endDrag);
-            });
-            letter.addEventListener('touchstart', function(e) {
-                dragging = true;
-                startX = e.touches[0].clientX;
-                startY = e.touches[0].clientY;
-                letter.style.transition = 'none';
-                document.addEventListener('touchmove', onMove, {passive: false});
-                document.addEventListener('touchend', endDrag);
-            });
-        }
-
-        document.querySelectorAll('.gradient').forEach(el => {
-            splitLetters(el);
-            el.querySelectorAll('.letter').forEach(makeInteractive);
-        });
-
         document.addEventListener('mousemove', function(e) {
             const rect = document.body.getBoundingClientRect();
             const x = e.clientX - rect.width / 2;
