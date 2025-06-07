@@ -5,6 +5,7 @@
     <title>Audio Autoplay</title>
     <style>
         body {
+            --angle: 0deg;
             background-color: #000;
             display: flex;
             justify-content: center;
@@ -17,18 +18,35 @@
         .player-container {
             text-align: center;
         }
-        h1 {
+        h1.gradient {
             font-family: "Comic Sans MS", "Comic Sans", cursive;
+            background-image: linear-gradient(var(--angle), red, orange, yellow, green, blue, indigo, violet);
+            -webkit-background-clip: text;
+            color: transparent;
         }
     </style>
 </head>
 <body>
     <div class="player-container">
-        <h1>you got weezerd lol</h1>
+        <h1 class="gradient">you got weezerd lol</h1>
         <audio controls autoplay loop>
             <source src="static/audio.mp3" type="audio/mpeg">
             Your browser does not support the audio element.
         </audio>
+        <h2>riff only for those who desire</h2>
+        <audio controls>
+            <source src="static/riff.mp3" type="audio/mpeg">
+            Your browser does not support the audio element.
+        </audio>
     </div>
+    <script>
+        document.addEventListener('mousemove', function(e) {
+            const rect = document.body.getBoundingClientRect();
+            const x = e.clientX - rect.width / 2;
+            const y = e.clientY - rect.height / 2;
+            const angle = Math.atan2(y, x) * (180 / Math.PI);
+            document.body.style.setProperty('--angle', angle + 'deg');
+        });
+    </script>
 </body>
 </html>
