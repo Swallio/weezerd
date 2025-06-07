@@ -80,10 +80,15 @@
     <script>
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         const ctx = new AudioContext();
+        const mainAudio = document.getElementById('main-audio');
 
         function resumeContext() {
             if (ctx.state === 'suspended') {
-                ctx.resume();
+                ctx.resume().then(() => {
+                    if (mainAudio.autoplay && mainAudio.paused) {
+                        mainAudio.play();
+                    }
+                });
             }
         }
 
