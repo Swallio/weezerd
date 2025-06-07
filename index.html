@@ -15,14 +15,27 @@
             color: #fff;
             font-family: Arial, sans-serif;
         }
+
         .player-container {
             text-align: center;
         }
-        h1.gradient {
+
+        .gradient {
             font-family: "Comic Sans MS", "Comic Sans", cursive;
             background-image: linear-gradient(var(--angle), red, orange, yellow, green, blue, indigo, violet);
+            background-size: 400% 400%;
             -webkit-background-clip: text;
             color: transparent;
+            animation: gradientMove 8s linear infinite;
+        }
+
+        @keyframes gradientMove {
+            from {
+                background-position: 0% 50%;
+            }
+            to {
+                background-position: 100% 50%;
+            }
         }
     </style>
 </head>
@@ -33,7 +46,7 @@
             <source src="static/audio.mp3" type="audio/mpeg">
             Your browser does not support the audio element.
         </audio>
-        <h2>riff only for those who desire</h2>
+        <h2 class="gradient" style="font-size:1.2em;">riff only for those who desire</h2>
         <audio controls>
             <source src="static/riff.mp3" type="audio/mpeg">
             Your browser does not support the audio element.
