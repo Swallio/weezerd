@@ -154,7 +154,9 @@
 
         const WARNING_MSG = 'no joke this gets extremely loud lol if you are wearing headphones you should probably just take them off. Continue?';
         const SUPER_MSG = 'this one is actually extremely funny but holy shit it is loud';
+        let loudPrompted = false;
         let loudConfirmed = false;
+        let superPrompted = false;
         let superConfirmed = false;
         let calmingOffered = false;
         let pauseTimer;
@@ -165,17 +167,23 @@
             crusher2.disconnect();
             if (crusherToggle.checked) {
                 const value = parseInt(bitDepthRange.value, 10);
-                if (value > 90 && !loudConfirmed) {
+                if (value > 90 && !loudPrompted) {
+                    loudPrompted = true;
                     const proceed = confirm(WARNING_MSG);
+                    loudConfirmed = proceed;
                     if (!proceed) {
                         crusherToggle.checked = false;
                         bitDepthRange.value = 20;
                         updateCrunch(20);
-                        loudConfirmed = false;
                         sources.forEach(src => src.connect(ctx.destination));
                         return;
                     }
-                    loudConfirmed = true;
+                } else if (value > 90 && !loudConfirmed) {
+                    crusherToggle.checked = false;
+                    bitDepthRange.value = 20;
+                    updateCrunch(20);
+                    sources.forEach(src => src.connect(ctx.destination));
+                    return;
                 }
                 sources.forEach(src => src.connect(crusher.input));
                 if (superToggle.checked && superConfirmed) {
@@ -185,24 +193,29 @@
                     crusher.connect(ctx.destination);
                 }
             } else {
-                loudConfirmed = false;
                 sources.forEach(src => src.connect(ctx.destination));
             }
         }
 
         bitDepthRange.addEventListener('input', () => {
             const value = parseInt(bitDepthRange.value, 10);
-            if (crusherToggle.checked && value > 90 && !loudConfirmed) {
+            if (crusherToggle.checked && value > 90 && !loudPrompted) {
+                loudPrompted = true;
                 const proceed = confirm(WARNING_MSG);
+                loudConfirmed = proceed;
                 if (!proceed) {
                     crusherToggle.checked = false;
                     bitDepthRange.value = 20;
                     updateCrunch(20);
-                    loudConfirmed = false;
                     applyConnections();
                     return;
                 }
-                loudConfirmed = true;
+            } else if (crusherToggle.checked && value > 90 && !loudConfirmed) {
+                crusherToggle.checked = false;
+                bitDepthRange.value = 20;
+                updateCrunch(20);
+                applyConnections();
+                return;
             }
             updateCrunch(value);
         });
@@ -210,16 +223,22 @@
         crusherToggle.addEventListener('change', applyConnections);
         superToggle.addEventListener('change', () => {
             if (superToggle.checked) {
-                if (!confirm(SUPER_MSG)) {
+                if (!superPrompted) {
+                    superPrompted = true;
+                    if (!confirm(SUPER_MSG)) {
+                        superConfirmed = false;
+                        superToggle.checked = false;
+                        return;
+                    }
+                    superConfirmed = true;
+                } else if (!superConfirmed) {
                     superToggle.checked = false;
                     return;
                 }
-                superConfirmed = true;
                 crusherToggle.checked = true;
                 crusher2.bits = 1;
                 crusher2.reduction = 0.001;
             } else {
-                superConfirmed = false;
                 crusher2.bits = percentToBits(bitDepthRange.value);
                 crusher2.reduction = 0.2;
             }
@@ -243,13 +262,13 @@
             if (!mainAudio.paused || !riffAudio.paused) return;
             pauseTimer = setTimeout(() => {
                 if (superToggle.checked && superConfirmed && mainAudio.paused && riffAudio.paused && !calmingOffered) {
-                    if (confirm("you didn't do anything for 30 seconds after listening to the super crunch... do you need some relaxing music to soothe your nerves and put your mind at ease?")) {
+                    if (confirm("you didn't do anything for 27 seconds after listening to the super crunch... do you need some relaxing music to soothe your nerves and put your mind at ease?")) {
                         showCalmingEmbed();
                     } else {
                         calmingOffered = true;
                     }
                 }
-            }, 32000);
+            }, 27000);
         }
 
         function cancelCalmCheck() {
@@ -264,7 +283,7 @@
 
         applyConnections();
     </script>
-    <div class="gradient" style="text-align:center;font-size:small;margin-top:1em;">
+    <div class="gradient" style="text-align:center;font-size:small;margin-top:2em;">
         to my girlfriend, my friends, and my coworkers<br>
         who have been weezerd many times before.<br>
         -owen
