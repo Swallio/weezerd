@@ -67,7 +67,7 @@
             const rect = document.body.getBoundingClientRect();
             const x = e.clientX - rect.width / 2;
             const y = e.clientY - rect.height / 2;
-            const angle = Math.atan2(y, x) * (180 / Math.PI) + 90;
+            const angle = Math.atan2(y, x) * (180 / Math.PI) + 270;
             document.body.style.setProperty('--angle', angle + 'deg');
         });
     </script>
