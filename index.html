@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Weezerd Crusher Demo</title>
+</head>
+<body>
+  <h1>Weezerd Crusher Demo</h1>
+  <p>Interact with the page to start audio.</p>
+  <script>
+    // Initialize the AudioContext for the Crusher demo.
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+    // Existing Crusher setup would go here...
+
+    // Ensure the context resumes when the user first interacts with the page.
+    function resumeContext() {
+      if (ctx.state === 'suspended') {
+        ctx.resume();
+      }
+    }
+    document.addEventListener('click', resumeContext, { once: true });
+    document.addEventListener('touchstart', resumeContext, { once: true });
+  </script>
+</body>
+</html>
