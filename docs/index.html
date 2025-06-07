@@ -75,6 +75,11 @@
             <label for="bitDepthRange"><span id="crunchValue">20</span>% crunch</label><br>
             <input type="range" id="bitDepthRange" min="20" max="100" value="20">
         </div>
+        <div style="margin-top:0.5em;">
+            <label>
+                <input type="checkbox" id="superToggle"> super crunch? (not recommended)
+            </label>
+        </div>
     </div>
     <script>
         document.addEventListener('mousemove', function(e) {
@@ -101,15 +106,16 @@
         const bitDepthRange = document.getElementById('bitDepthRange');
         const crunchValue = document.getElementById('crunchValue');
         const crusherToggle = document.getElementById('crusherToggle');
+        const superToggle = document.getElementById('superToggle');
         const crusher = new Crusher(ctx, Math.round(64 - ((bitDepthRange.value - 20) / 80) * 63), 0.2);
+        const crusher2 = new Crusher(ctx, Math.round(64 - ((bitDepthRange.value - 20) / 80) * 63), 0.2);
 
         const sources = [];
         document.querySelectorAll('audio').forEach(audio => {
             const src = ctx.createMediaElementSource(audio);
             sources.push(src);
-            src.connect(crusher.input);
+            src.connect(ctx.destination);
         });
-        crusher.connect(ctx.destination);
 
         function percentToBits(percent) {
             return Math.round(64 - ((percent - 20) / 80) * 63);
@@ -118,6 +124,7 @@
         function updateCrunch(percent) {
             crunchValue.textContent = percent;
             crusher.bits = percentToBits(percent);
+            crusher2.bits = percentToBits(percent);
         }
 
         updateCrunch(bitDepthRange.value);
@@ -125,27 +132,10 @@
         const WARNING_MSG = 'no joke this gets extremely loud lol if you are wearing headphones you should probably just take them off. Continue?';
         let loudConfirmed = false;
 
-        bitDepthRange.addEventListener('input', () => {
-            const value = parseInt(bitDepthRange.value, 10);
-            if (crusherToggle.checked && value > 90 && !loudConfirmed) {
-                const proceed = confirm(WARNING_MSG);
-                if (!proceed) {
-                    crusherToggle.checked = false;
-                    bitDepthRange.value = 20;
-                    updateCrunch(20);
-                    sources.forEach(src => src.disconnect());
-                    crusher.disconnect();
-                    sources.forEach(src => src.connect(ctx.destination));
-                    return;
-                }
-                loudConfirmed = true;
-            }
-            updateCrunch(value);
-        });
-
-        crusherToggle.addEventListener('change', () => {
+        function applyConnections() {
             sources.forEach(src => src.disconnect());
             crusher.disconnect();
+            crusher2.disconnect();
             if (crusherToggle.checked) {
                 const value = parseInt(bitDepthRange.value, 10);
                 if (value > 90 && !loudConfirmed) {
@@ -161,12 +151,39 @@
                     loudConfirmed = true;
                 }
                 sources.forEach(src => src.connect(crusher.input));
-                crusher.connect(ctx.destination);
+                if (superToggle.checked) {
+                    crusher.connect(crusher2.input);
+                    crusher2.connect(ctx.destination);
+                } else {
+                    crusher.connect(ctx.destination);
+                }
             } else {
                 loudConfirmed = false;
                 sources.forEach(src => src.connect(ctx.destination));
             }
+        }
+
+        bitDepthRange.addEventListener('input', () => {
+            const value = parseInt(bitDepthRange.value, 10);
+            if (crusherToggle.checked && value > 90 && !loudConfirmed) {
+                const proceed = confirm(WARNING_MSG);
+                if (!proceed) {
+                    crusherToggle.checked = false;
+                    bitDepthRange.value = 20;
+                    updateCrunch(20);
+                    loudConfirmed = false;
+                    applyConnections();
+                    return;
+                }
+                loudConfirmed = true;
+            }
+            updateCrunch(value);
         });
+
+        crusherToggle.addEventListener('change', applyConnections);
+        superToggle.addEventListener('change', applyConnections);
+
+        applyConnections();
     </script>
     <footer style="color:#555; text-align:center; margin-top:14em; padding-top:1em; max-width:30em; margin-left:auto; margin-right:auto;">
       <small>
