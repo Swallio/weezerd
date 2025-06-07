@@ -14,7 +14,7 @@
             height: 100vh;
             margin: 0;
             color: #fff;
-            font-family: Arial, sans-serif;
+            font-family: "Comic Sans MS", "Comic Sans", cursive;
         }
 
         .player-container {
@@ -62,18 +62,18 @@
             <source src="static/riff.mp3" type="audio/mpeg">
             Your browser does not support the audio element.
         </audio>
-        <p style="font-family:'Comic Sans MS','Comic Sans',cursive;text-align:center;margin:1em 0 0;">
+        <p style="font-family:'Comic Sans MS','Comic Sans',cursive;text-align:center;font-weight:bold;margin:1em 0 0;">
             you are now entering<br>The Crunch Zone<br>slide to crunch
         </p>
+        <div style="margin-top:0.5em;">
+            <label>
+                <input type="checkbox" id="crusherToggle" checked> enable crunch
+            </label>
+        </div>
         <img src="static/avgn.gif" alt="AVGN" style="display:block;width:25%;margin:0.5em auto 0;">
         <div style="margin-top:1em;">
             <label for="bitDepthRange"><span id="crunchValue">20</span>% crunch</label><br>
-            <input type="range" id="bitDepthRange" min="1" max="64" value="64">
-        </div>
-        <div style="margin-top:0.5em;">
-            <label style="font-family:'Comic Sans MS','Comic Sans',cursive;">
-                <input type="checkbox" id="crusherToggle" checked> enable crunch
-            </label>
+            <input type="range" id="bitDepthRange" min="20" max="100" value="20">
         </div>
     </div>
     <script>
@@ -101,7 +101,7 @@
         const bitDepthRange = document.getElementById('bitDepthRange');
         const crunchValue = document.getElementById('crunchValue');
         const crusherToggle = document.getElementById('crusherToggle');
-        const crusher = new Crusher(ctx, parseInt(bitDepthRange.value, 10), 0.2);
+        const crusher = new Crusher(ctx, Math.round(64 - ((bitDepthRange.value - 20) / 80) * 63), 0.2);
 
         const sources = [];
         document.querySelectorAll('audio').forEach(audio => {
@@ -111,10 +111,13 @@
         });
         crusher.connect(ctx.destination);
 
-        function updateCrunch(bits) {
-            crusher.bits = parseInt(bits, 10);
-            const percent = Math.round(20 + ((64 - bits) / 63) * 80);
+        function percentToBits(percent) {
+            return Math.round(64 - ((percent - 20) / 80) * 63);
+        }
+
+        function updateCrunch(percent) {
             crunchValue.textContent = percent;
+            crusher.bits = percentToBits(percent);
         }
 
         updateCrunch(bitDepthRange.value);
@@ -134,7 +137,7 @@
             }
         });
     </script>
-    <footer style="color:#555; text-align:center; margin-top:12em; padding-top:1em; max-width:30em; margin-left:auto; margin-right:auto;">
+    <footer style="color:#555; text-align:center; margin-top:14em; padding-top:1em; max-width:30em; margin-left:auto; margin-right:auto;">
       <small>
         <strong>Fair-Use Notice:</strong> This site includes brief audio excerpts and
         references to copyrighted works that are owned by their respective
