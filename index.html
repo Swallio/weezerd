@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Audio Autoplay</title>
+    <style>
+        body {
+            --angle: 0deg;
+            background-color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            color: #fff;
+            font-family: Arial, sans-serif;
+        }
+
+        .player-container {
+            text-align: center;
+        }
+
+        .gradient {
+            font-family: "Comic Sans MS", "Comic Sans", cursive;
+            background-image: linear-gradient(
+                var(--angle),
+                red,
+                orange,
+                yellow,
+                green,
+                blue,
+                indigo,
+                violet,
+                red
+            );
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            color: transparent;
+            animation: gradientMove 3s linear infinite;
+        }
+
+        @keyframes gradientMove {
+            from {
+                background-position: 0% 50%;
+            }
+            to {
+                background-position: 200% 50%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="player-container">
+        <h1 class="gradient">you got weezerd lol</h1>
+        <audio controls autoplay loop>
+            <source src="static/audio.mp3" type="audio/mpeg">
+            Your browser does not support the audio element.
+        </audio>
+        <h2 class="gradient" style="font-size:1.2em;">riff only for those who desire</h2>
+        <audio controls>
+            <source src="static/riff.mp3" type="audio/mpeg">
+            Your browser does not support the audio element.
+        </audio>
+    </div>
+    <script>
+        document.addEventListener('mousemove', function(e) {
+            const rect = document.body.getBoundingClientRect();
+            const x = e.clientX - rect.width / 2;
+            const y = e.clientY - rect.height / 2;
+            const angle = Math.atan2(y, x) * (180 / Math.PI) + 270;
+            document.body.style.setProperty('--angle', angle + 'deg');
+        });
+    </script>
+</body>
+</html>
