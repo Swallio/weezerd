@@ -22,11 +22,23 @@
 
         .gradient {
             font-family: "Comic Sans MS", "Comic Sans", cursive;
-            background-image: repeating-linear-gradient(var(--angle), red, orange, yellow, green, blue, indigo, violet, red);
-            background-size: 200% 200%;
+            /* Use a regular linear-gradient and repeat the first color at the end
+               so the animation loops smoothly without a visible jump */
+            background-image: linear-gradient(
+                var(--angle),
+                red,
+                orange,
+                yellow,
+                green,
+                blue,
+                indigo,
+                violet,
+                red
+            );
+            background-size: 300% 300%;
             -webkit-background-clip: text;
             color: transparent;
-            animation: gradientMove 4s linear infinite;
+            animation: gradientMove 3s linear infinite;
         }
 
         @keyframes gradientMove {
