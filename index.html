@@ -14,7 +14,7 @@
             height: 100vh;
             margin: 0;
             color: #fff;
-            font-family: "Comic Sans MS", "Comic Sans", cursive;
+            font-family: "Comic Sans MS", "Comic Sans", "Comic Neue", "Chalkboard SE", cursive;
         }
 
         .player-container {
@@ -22,7 +22,7 @@
         }
 
         .gradient {
-            font-family: "Comic Sans MS", "Comic Sans", cursive;
+            font-family: "Comic Sans MS", "Comic Sans", "Comic Neue", "Chalkboard SE", cursive;
             background-image: linear-gradient(
                 var(--angle),
                 red,
@@ -62,7 +62,7 @@
             <source src="static/riff.mp3" type="audio/mpeg">
             Your browser does not support the audio element.
         </audio>
-        <p style="font-family:'Comic Sans MS','Comic Sans',cursive;text-align:center;font-weight:bold;margin:2em 0 0;">
+        <p style="font-family:'Comic Sans MS','Comic Sans','Comic Neue','Chalkboard SE',cursive;text-align:center;font-weight:bold;margin:2em 0 0;">
             you are now entering<br>The Crunch Zone<br>slide to crunch
         </p>
         <div style="margin-top:0.5em;">
@@ -122,15 +122,20 @@
 
         updateCrunch(bitDepthRange.value);
 
+        const WARNING_MSG = 'no joke this gets extremely loud lol if you are wearing headphones you should probably just take them off. Continue?';
         let loudConfirmed = false;
 
         bitDepthRange.addEventListener('input', () => {
             const value = parseInt(bitDepthRange.value, 10);
             if (crusherToggle.checked && value > 90 && !loudConfirmed) {
-                const proceed = confirm('At this level the audio will be very loud. Do you want to proceed?');
+                const proceed = confirm(WARNING_MSG);
                 if (!proceed) {
-                    bitDepthRange.value = 90;
-                    updateCrunch(90);
+                    crusherToggle.checked = false;
+                    bitDepthRange.value = 20;
+                    updateCrunch(20);
+                    sources.forEach(src => src.disconnect());
+                    crusher.disconnect();
+                    sources.forEach(src => src.connect(ctx.destination));
                     return;
                 }
                 loudConfirmed = true;
@@ -141,11 +146,24 @@
         crusherToggle.addEventListener('change', () => {
             sources.forEach(src => src.disconnect());
             crusher.disconnect();
-            loudConfirmed = false;
             if (crusherToggle.checked) {
+                const value = parseInt(bitDepthRange.value, 10);
+                if (value > 90 && !loudConfirmed) {
+                    const proceed = confirm(WARNING_MSG);
+                    if (!proceed) {
+                        crusherToggle.checked = false;
+                        bitDepthRange.value = 20;
+                        updateCrunch(20);
+                        loudConfirmed = false;
+                        sources.forEach(src => src.connect(ctx.destination));
+                        return;
+                    }
+                    loudConfirmed = true;
+                }
                 sources.forEach(src => src.connect(crusher.input));
                 crusher.connect(ctx.destination);
             } else {
+                loudConfirmed = false;
                 sources.forEach(src => src.connect(ctx.destination));
             }
         });
