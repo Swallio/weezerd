@@ -53,15 +53,19 @@
 <body>
     <div class="player-container">
         <h1 class="gradient">you got weezerd lol</h1>
-        <audio controls autoplay loop>
+        <audio id="main-audio" controls autoplay loop>
             <source src="static/audio.mp3" type="audio/mpeg">
             Your browser does not support the audio element.
         </audio>
         <h2 class="gradient" style="font-size:1.2em;">riff only for those who desire</h2>
-        <audio controls>
+        <audio id="riff-audio" controls>
             <source src="static/riff.mp3" type="audio/mpeg">
             Your browser does not support the audio element.
         </audio>
+        <div style="margin-top:1em;">
+            <label for="bitDepthRange">Bit Depth: <span id="bitDepthValue">4</span></label><br>
+            <input type="range" id="bitDepthRange" min="1" max="16" value="4">
+        </div>
     </div>
     <script>
         document.addEventListener('mousemove', function(e) {
@@ -70,6 +74,25 @@
             const y = e.clientY - rect.height / 2;
             const angle = Math.atan2(y, x) * (180 / Math.PI) + 270;
             document.body.style.setProperty('--angle', angle + 'deg');
+        });
+    </script>
+    <script src="static/js/crusher.js"></script>
+    <script>
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const ctx = new AudioContext();
+        const bitDepthRange = document.getElementById('bitDepthRange');
+        const bitDepthValue = document.getElementById('bitDepthValue');
+        const crusher = new Crusher(ctx, parseInt(bitDepthRange.value, 10), 0.2);
+
+        document.querySelectorAll('audio').forEach(audio => {
+            const src = ctx.createMediaElementSource(audio);
+            src.connect(crusher.input);
+        });
+        crusher.connect(ctx.destination);
+
+        bitDepthRange.addEventListener('input', () => {
+            crusher.bits = parseInt(bitDepthRange.value, 10);
+            bitDepthValue.textContent = bitDepthRange.value;
         });
     </script>
     <footer style="color:#555; text-align:center; margin-top:12em; padding-top:1em; max-width:30em; margin-left:auto; margin-right:auto;">
