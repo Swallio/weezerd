@@ -2,6 +2,12 @@
 <html>
 <head>
     <meta charset="UTF-8">
+    <script>
+        if (window.matchMedia('(max-width: 600px)').matches &&
+            !location.pathname.includes('mobile.html')) {
+            window.location.href = 'mobile.html';
+        }
+    </script>
     <title>weezrd</title>
     <style>
         body {
@@ -40,11 +46,6 @@
             animation: gradientMove 3s linear infinite;
         }
 
-        .spin {
-            display: inline-block;
-            animation: spin 5s linear infinite;
-        }
-
         @keyframes gradientMove {
             from {
                 background-position: 0% 50%;
@@ -52,11 +53,6 @@
             to {
                 background-position: 200% 50%;
             }
-        }
-
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -257,8 +253,8 @@
 
         applyConnections();
     </script>
-    <div class="gradient spin" style="text-align:center;font-size:small;margin-top:1em;">
-        to my coworkers, friends, and lover<br>
+    <div class="gradient" style="text-align:center;font-size:small;margin-top:1em;">
+        to my girlfriend, my friends, and my coworkers<br>
         who have been weezerd many times before.<br>
         -owen
     </div>
