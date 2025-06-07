@@ -3,11 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <title>Audio Autoplay</title>
+    <style>
+        body {
+            background-color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            color: #fff;
+            font-family: Arial, sans-serif;
+        }
+        .player-container {
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
-    <audio controls autoplay loop>
-        <source src="static/audio.mp3" type="audio/mpeg">
-        Your browser does not support the audio element.
-    </audio>
+    <div class="player-container">
+        <h1>Audio Player</h1>
+        <audio controls autoplay loop>
+            <source src="static/audio.mp3" type="audio/mpeg">
+            Your browser does not support the audio element.
+        </audio>
+    </div>
 </body>
 </html>
