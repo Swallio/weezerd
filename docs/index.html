@@ -67,8 +67,13 @@
         </p>
         <img src="static/avgn.gif" alt="AVGN" style="display:block;width:25%;margin:0.5em auto 0;">
         <div style="margin-top:1em;">
-            <label for="bitDepthRange">Bit Depth: <span id="bitDepthValue">64</span></label><br>
+            <label for="bitDepthRange"><span id="crunchValue">20</span>% crunch</label><br>
             <input type="range" id="bitDepthRange" min="1" max="64" value="64">
+        </div>
+        <div style="margin-top:0.5em;">
+            <label style="font-family:'Comic Sans MS','Comic Sans',cursive;">
+                <input type="checkbox" id="crusherToggle" checked> enable crunch
+            </label>
         </div>
     </div>
     <script>
@@ -94,18 +99,39 @@
 
         document.addEventListener('play', resumeContext, true);
         const bitDepthRange = document.getElementById('bitDepthRange');
-        const bitDepthValue = document.getElementById('bitDepthValue');
+        const crunchValue = document.getElementById('crunchValue');
+        const crusherToggle = document.getElementById('crusherToggle');
         const crusher = new Crusher(ctx, parseInt(bitDepthRange.value, 10), 0.2);
 
+        const sources = [];
         document.querySelectorAll('audio').forEach(audio => {
             const src = ctx.createMediaElementSource(audio);
+            sources.push(src);
             src.connect(crusher.input);
         });
         crusher.connect(ctx.destination);
 
+        function updateCrunch(bits) {
+            crusher.bits = parseInt(bits, 10);
+            const percent = Math.round(20 + ((64 - bits) / 63) * 80);
+            crunchValue.textContent = percent;
+        }
+
+        updateCrunch(bitDepthRange.value);
+
         bitDepthRange.addEventListener('input', () => {
-            crusher.bits = parseInt(bitDepthRange.value, 10);
-            bitDepthValue.textContent = bitDepthRange.value;
+            updateCrunch(bitDepthRange.value);
+        });
+
+        crusherToggle.addEventListener('change', () => {
+            sources.forEach(src => src.disconnect());
+            crusher.disconnect();
+            if (crusherToggle.checked) {
+                sources.forEach(src => src.connect(crusher.input));
+                crusher.connect(ctx.destination);
+            } else {
+                sources.forEach(src => src.connect(ctx.destination));
+            }
         });
     </script>
     <footer style="color:#555; text-align:center; margin-top:12em; padding-top:1em; max-width:30em; margin-left:auto; margin-right:auto;">
