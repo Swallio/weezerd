@@ -88,8 +88,7 @@
             }
         }
 
-        document.addEventListener('click', resumeContext, { once: true, capture: true });
-        document.addEventListener('touchstart', resumeContext, { once: true, capture: true });
+        document.addEventListener('play', resumeContext, true);
         const bitDepthRange = document.getElementById('bitDepthRange');
         const bitDepthValue = document.getElementById('bitDepthValue');
         const crusher = new Crusher(ctx, parseInt(bitDepthRange.value, 10), 0.2);
