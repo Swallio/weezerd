@@ -1,0 +1,13 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+# Backup files
+*~
+
+# Misc build artifacts
+build/
+dist/
+
+# Node modules
+node_modules/

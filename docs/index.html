@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>weezrd</title>
+    <style>
+        body {
+            --angle: 0deg;
+            background-color: #000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            color: #fff;
+            font-family: Arial, sans-serif;
+        }
+
+        .player-container {
+            text-align: center;
+        }
+
+        .gradient {
+            font-family: "Comic Sans MS", "Comic Sans", cursive;
+            background-image: linear-gradient(
+                var(--angle),
+                red,
+                orange,
+                yellow,
+                green,
+                blue,
+                indigo,
+                violet,
+                red
+            );
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            color: transparent;
+            animation: gradientMove 3s linear infinite;
+        }
+
+        @keyframes gradientMove {
+            from {
+                background-position: 0% 50%;
+            }
+            to {
+                background-position: 200% 50%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="player-container">
+        <h1 class="gradient">you got weezerd lol</h1>
+        <audio id="main-audio" controls autoplay loop>
+            <source src="static/audio.mp3" type="audio/mpeg">
+            Your browser does not support the audio element.
+        </audio>
+        <h2 class="gradient" style="font-size:1.2em;">riff only for those who desire</h2>
+        <audio id="riff-audio" controls>
+            <source src="static/riff.mp3" type="audio/mpeg">
+            Your browser does not support the audio element.
+        </audio>
+        <div style="margin-top:1em;">
+            <label for="bitDepthRange">Bit Depth: <span id="bitDepthValue">32</span></label><br>
+            <input type="range" id="bitDepthRange" min="1" max="32" value="32">
+        </div>
+    </div>
+    <script>
+        document.addEventListener('mousemove', function(e) {
+            const rect = document.body.getBoundingClientRect();
+            const x = e.clientX - rect.width / 2;
+            const y = e.clientY - rect.height / 2;
+            const angle = Math.atan2(y, x) * (180 / Math.PI) + 270;
+            document.body.style.setProperty('--angle', angle + 'deg');
+        });
+    </script>
+    <script src="static/js/crusher.js"></script>
+    <script>
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const ctx = new AudioContext();
+
+        function resumeContext() {
+            if (ctx.state === 'suspended') {
+                ctx.resume();
+            }
+        }
+
+        document.addEventListener('click', resumeContext, { once: true });
+        document.addEventListener('touchstart', resumeContext, { once: true });
+        const bitDepthRange = document.getElementById('bitDepthRange');
+        const bitDepthValue = document.getElementById('bitDepthValue');
+        const crusher = new Crusher(ctx, parseInt(bitDepthRange.value, 10), 0.2);
+
+        document.querySelectorAll('audio').forEach(audio => {
+            const src = ctx.createMediaElementSource(audio);
+            src.connect(crusher.input);
+        });
+        crusher.connect(ctx.destination);
+
+        bitDepthRange.addEventListener('input', () => {
+            crusher.bits = parseInt(bitDepthRange.value, 10);
+            bitDepthValue.textContent = bitDepthRange.value;
+        });
+    </script>
+    <footer style="color:#555; text-align:center; margin-top:12em; padding-top:1em; max-width:30em; margin-left:auto; margin-right:auto;">
+      <small>
+        <strong>Fair-Use Notice:</strong> This site includes brief audio excerpts and
+        references to copyrighted works that are owned by their respective
+        rights-holders.  The material is presented for transformative,
+        non-commercial, and informational purposes only—specifically, for
+        commentary and parody.  We believe this constitutes a “fair use” under
+        17 U.S.C. § 107.  No endorsement by, or affiliation with, the copyright
+        owners is implied, and all intellectual-property rights remain with them.
+        If you are a rights-holder and believe your material has been used beyond
+        what fair use allows, please <a href="mailto:swen.owall@gmail.com">contact us</a>; we will respond promptly.
+      </small>
+    </footer>
+</body>
+</html>
