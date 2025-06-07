@@ -77,9 +77,10 @@
         </div>
         <div style="margin-top:0.5em;">
             <label>
-                <input type="checkbox" id="superToggle"> super crunch? (not recommended)
+                <input type="checkbox" id="superToggle"> super crunch (crunch must be enabled) (not recommended under any circumstances)
             </label>
         </div>
+        <div id="calmingContainer" style="margin-top:0.5em;"></div>
     </div>
     <script>
         document.addEventListener('mousemove', function(e) {
@@ -107,6 +108,7 @@
         const crunchValue = document.getElementById('crunchValue');
         const crusherToggle = document.getElementById('crusherToggle');
         const superToggle = document.getElementById('superToggle');
+        const calmingContainer = document.getElementById('calmingContainer');
         const crusher = new Crusher(ctx, Math.round(64 - ((bitDepthRange.value - 20) / 80) * 63), 0.2);
         const crusher2 = new Crusher(ctx, 1, 0.001);
 
@@ -133,7 +135,11 @@
         updateCrunch(bitDepthRange.value);
 
         const WARNING_MSG = 'no joke this gets extremely loud lol if you are wearing headphones you should probably just take them off. Continue?';
+        const SUPER_MSG = 'this one is actually extremely funny but holy shit it is loud';
         let loudConfirmed = false;
+        let superConfirmed = false;
+        let calmingOffered = false;
+        let pauseTimer;
 
         function applyConnections() {
             sources.forEach(src => src.disconnect());
@@ -154,7 +160,7 @@
                     loudConfirmed = true;
                 }
                 sources.forEach(src => src.connect(crusher.input));
-                if (superToggle.checked) {
+                if (superToggle.checked && superConfirmed) {
                     crusher.connect(crusher2.input);
                     crusher2.connect(ctx.destination);
                 } else {
@@ -186,13 +192,55 @@
         crusherToggle.addEventListener('change', applyConnections);
         superToggle.addEventListener('change', () => {
             if (superToggle.checked) {
+                if (!confirm(SUPER_MSG)) {
+                    superToggle.checked = false;
+                    return;
+                }
+                superConfirmed = true;
                 crusher2.bits = 1;
                 crusher2.reduction = 0.001;
             } else {
+                superConfirmed = false;
                 crusher2.bits = percentToBits(bitDepthRange.value);
                 crusher2.reduction = 0.2;
             }
             applyConnections();
+        });
+
+        function showCalmingEmbed() {
+            if (calmingOffered) return;
+            calmingOffered = true;
+            calmingContainer.innerHTML =
+                '<iframe style="border-radius:12px" src="https://open.spotify.com/embed/playlist/37i9dQZF1DWXe9gFZP0gtP?utm_source=generator" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>' +
+                '<div style="text-align:center;"><button id="closeCalming">[x]</button></div>';
+            document.getElementById('closeCalming').addEventListener('click', () => {
+                calmingContainer.innerHTML = '';
+            });
+        }
+
+        function checkForCalmPrompt() {
+            if (!superToggle.checked || !superConfirmed || calmingOffered) return;
+            clearTimeout(pauseTimer);
+            if (!mainAudio.paused || !riffAudio.paused) return;
+            pauseTimer = setTimeout(() => {
+                if (superToggle.checked && superConfirmed && mainAudio.paused && riffAudio.paused && !calmingOffered) {
+                    if (confirm('do you require calming music?')) {
+                        showCalmingEmbed();
+                    } else {
+                        calmingOffered = true;
+                    }
+                }
+            }, 1000);
+        }
+
+        function cancelCalmCheck() {
+            clearTimeout(pauseTimer);
+        }
+
+        [mainAudio, riffAudio].forEach(a => {
+            a.addEventListener('pause', checkForCalmPrompt);
+            a.addEventListener('play', cancelCalmCheck);
+            a.addEventListener('ended', checkForCalmPrompt);
         });
 
         applyConnections();
