@@ -108,7 +108,7 @@
         const crusherToggle = document.getElementById('crusherToggle');
         const superToggle = document.getElementById('superToggle');
         const crusher = new Crusher(ctx, Math.round(64 - ((bitDepthRange.value - 20) / 80) * 63), 0.2);
-        const crusher2 = new Crusher(ctx, Math.round(64 - ((bitDepthRange.value - 20) / 80) * 63), 0.2);
+        const crusher2 = new Crusher(ctx, 1, 0.001);
 
         const sources = [];
         document.querySelectorAll('audio').forEach(audio => {
@@ -124,7 +124,10 @@
         function updateCrunch(percent) {
             crunchValue.textContent = percent;
             crusher.bits = percentToBits(percent);
-            crusher2.bits = percentToBits(percent);
+            if (!superToggle.checked) {
+                crusher2.bits = percentToBits(percent);
+                crusher2.reduction = 0.2;
+            }
         }
 
         updateCrunch(bitDepthRange.value);
@@ -181,7 +184,16 @@
         });
 
         crusherToggle.addEventListener('change', applyConnections);
-        superToggle.addEventListener('change', applyConnections);
+        superToggle.addEventListener('change', () => {
+            if (superToggle.checked) {
+                crusher2.bits = 1;
+                crusher2.reduction = 0.001;
+            } else {
+                crusher2.bits = percentToBits(bitDepthRange.value);
+                crusher2.reduction = 0.2;
+            }
+            applyConnections();
+        });
 
         applyConnections();
     </script>
