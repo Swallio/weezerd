@@ -62,12 +62,12 @@
             <source src="static/riff.mp3" type="audio/mpeg">
             Your browser does not support the audio element.
         </audio>
-        <p style="font-family:'Comic Sans MS','Comic Sans',cursive;text-align:center;font-weight:bold;margin:1em 0 0;">
+        <p style="font-family:'Comic Sans MS','Comic Sans',cursive;text-align:center;font-weight:bold;margin:2em 0 0;">
             you are now entering<br>The Crunch Zone<br>slide to crunch
         </p>
         <div style="margin-top:0.5em;">
             <label>
-                <input type="checkbox" id="crusherToggle" checked> enable crunch
+                <input type="checkbox" id="crusherToggle"> enable crunch
             </label>
         </div>
         <img src="static/avgn.gif" alt="AVGN" style="display:block;width:25%;margin:0.5em auto 0;">
@@ -122,13 +122,26 @@
 
         updateCrunch(bitDepthRange.value);
 
+        let loudConfirmed = false;
+
         bitDepthRange.addEventListener('input', () => {
-            updateCrunch(bitDepthRange.value);
+            const value = parseInt(bitDepthRange.value, 10);
+            if (crusherToggle.checked && value > 90 && !loudConfirmed) {
+                const proceed = confirm('At this level the audio will be very loud. Do you want to proceed?');
+                if (!proceed) {
+                    bitDepthRange.value = 90;
+                    updateCrunch(90);
+                    return;
+                }
+                loudConfirmed = true;
+            }
+            updateCrunch(value);
         });
 
         crusherToggle.addEventListener('change', () => {
             sources.forEach(src => src.disconnect());
             crusher.disconnect();
+            loudConfirmed = false;
             if (crusherToggle.checked) {
                 sources.forEach(src => src.connect(crusher.input));
                 crusher.connect(ctx.destination);
