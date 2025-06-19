@@ -98,6 +98,11 @@
             </label>
         </div>
         <div id="calmingContainer" style="margin-top:0.5em;"></div>
+        <div style="margin-top:0.5em; text-align:center;">
+            <button id="uploadBtn">fuck it. crunch your own audio</button>
+            <input id="userFile" type="file" accept="audio/*" style="display:none">
+        </div>
+        <audio id="userAudio" controls style="display:none; margin-top:0.5em;"></audio>
     </div>
     <script>
         document.addEventListener('mousemove', function(e) {
@@ -127,14 +132,22 @@
         const crusherToggle = document.getElementById('crusherToggle');
         const superToggle = document.getElementById('superToggle');
         const calmingContainer = document.getElementById('calmingContainer');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const userFile = document.getElementById('userFile');
+        const userAudio = document.getElementById('userAudio');
         const crusher = new Crusher(ctx, Math.round(64 - ((bitDepthRange.value - 20) / 80) * 63), 0.2);
         const crusher2 = new Crusher(ctx, 1, 0.001);
-
         const sources = [];
-        document.querySelectorAll('audio').forEach(audio => {
+        const promptAudios = [mainAudio, riffAudio];
+
+        function addSource(audio) {
             const src = ctx.createMediaElementSource(audio);
             sources.push(src);
             src.connect(ctx.destination);
+        }
+
+        document.querySelectorAll('audio').forEach(audio => {
+            addSource(audio);
         });
 
         function percentToBits(percent) {
@@ -160,6 +173,7 @@
         let superConfirmed = false;
         let calmingOffered = false;
         let pauseTimer;
+        let userAdded = false;
 
         function applyConnections() {
             sources.forEach(src => src.disconnect());
@@ -259,9 +273,9 @@
         function checkForCalmPrompt() {
             if (!superToggle.checked || !superConfirmed || calmingOffered) return;
             clearTimeout(pauseTimer);
-            if (!mainAudio.paused || !riffAudio.paused) return;
+            if (promptAudios.some(a => !a.paused)) return;
             pauseTimer = setTimeout(() => {
-                if (superToggle.checked && superConfirmed && mainAudio.paused && riffAudio.paused && !calmingOffered) {
+                if (superToggle.checked && superConfirmed && promptAudios.every(a => a.paused) && !calmingOffered) {
                     if (confirm("you didn't do anything for 27 seconds after listening to the super crunch... do you need some relaxing music to soothe your nerves and put your mind at ease?")) {
                         showCalmingEmbed();
                     } else {
@@ -275,10 +289,36 @@
             clearTimeout(pauseTimer);
         }
 
-        [mainAudio, riffAudio].forEach(a => {
+        promptAudios.forEach(a => {
             a.addEventListener('pause', checkForCalmPrompt);
             a.addEventListener('play', cancelCalmCheck);
             a.addEventListener('ended', checkForCalmPrompt);
+        });
+
+        uploadBtn.addEventListener('click', () => {
+            const msg = "Uploaded files cannot be downloaded in their 'crunched' state. " +
+                "Audio processing happens only in your browser via the Web Audio API. " +
+                "This site is static and any files you add will disappear once you refresh. Continue?";
+            if (confirm(msg)) {
+                userFile.click();
+            }
+        });
+
+        userFile.addEventListener('change', () => {
+            const file = userFile.files[0];
+            if (!file) return;
+            const url = URL.createObjectURL(file);
+            userAudio.src = url;
+            userAudio.style.display = 'block';
+            if (!userAdded) {
+                addSource(userAudio);
+                promptAudios.push(userAudio);
+                userAudio.addEventListener('pause', checkForCalmPrompt);
+                userAudio.addEventListener('play', cancelCalmCheck);
+                userAudio.addEventListener('ended', checkForCalmPrompt);
+                userAdded = true;
+            }
+            applyConnections();
         });
 
         applyConnections();
