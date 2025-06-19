@@ -1,6 +1,6 @@
 # weezerd
 
-This project contains a simple example web page that plays an audio file automatically.
+This project contains a simple web page that plays an audio file and optionally compresses it to an unreasonable degree.
 
 ## Serving the site
 

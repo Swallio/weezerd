@@ -2,10 +2,11 @@
 <html>
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <script>
-        if (window.matchMedia('(max-width: 600px)').matches &&
-            !location.pathname.includes('mobile.html')) {
-            window.location.href = 'mobile.html';
+        if (window.matchMedia('(min-width: 601px)').matches &&
+            !location.pathname.includes('index.html')) {
+            window.location.href = 'index.html';
         }
     </script>
     <title>weezrd</title>
@@ -17,7 +18,8 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
+            height: auto;
             margin: 0;
             padding: 1em;
             color: #fff;
@@ -26,6 +28,14 @@
 
         .player-container {
             text-align: center;
+        }
+
+        audio {
+            width: 100%;
+        }
+
+        img {
+            width: 50%;
         }
 
         .gradient {

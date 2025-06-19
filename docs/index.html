@@ -2,6 +2,12 @@
 <html>
 <head>
     <meta charset="UTF-8">
+    <script>
+        if (window.matchMedia('(max-width: 600px)').matches &&
+            !location.pathname.includes('mobile.html')) {
+            window.location.href = 'mobile.html';
+        }
+    </script>
     <title>weezrd</title>
     <style>
         body {
@@ -13,8 +19,9 @@
             align-items: center;
             height: 100vh;
             margin: 0;
+            padding: 1em;
             color: #fff;
-            font-family: Arial, sans-serif;
+            font-family: "Comic Sans MS", "Comic Sans", "Comic Neue", "Chalkboard SE", cursive;
         }
 
         .player-container {
@@ -22,7 +29,7 @@
         }
 
         .gradient {
-            font-family: "Comic Sans MS", "Comic Sans", cursive;
+            font-family: "Comic Sans MS", "Comic Sans", "Comic Neue", "Chalkboard SE", cursive;
             background-image: linear-gradient(
                 var(--angle),
                 red,
@@ -62,10 +69,30 @@
             <source src="static/riff.mp3" type="audio/mpeg">
             Your browser does not support the audio element.
         </audio>
-        <div style="margin-top:1em;">
-            <label for="bitDepthRange">Bit Depth: <span id="bitDepthValue">32</span></label><br>
-            <input type="range" id="bitDepthRange" min="1" max="64" value="32">
+        <p style="font-family:'Comic Sans MS','Comic Sans','Comic Neue','Chalkboard SE',cursive;text-align:center;font-weight:bold;margin:2em 0 0;">
+            you are now entering<br>The Crunch Zone<br>slide to crunch
+        </p>
+        <div style="margin-top:0.5em;">
+            <label>
+                <input type="checkbox" id="crusherToggle"> enable crunch
+            </label>
         </div>
+        <img src="static/avgn.gif" alt="AVGN" style="display:block;width:25%;margin:0.5em auto 0;">
+        <div style="margin-top:1em;">
+            <label for="bitDepthRange"><span id="crunchValue">20</span>% crunch</label><br>
+            <input type="range" id="bitDepthRange" min="20" max="100" value="20">
+        </div>
+        <div style="margin-top:0.5em;">
+            <label>
+                <input type="checkbox" id="superToggle"> super crunch (not recommended under any circumstances)
+            </label>
+        </div>
+        <div id="calmingContainer" style="margin-top:0.5em;"></div>
+        <div style="margin-top:0.5em; text-align:center;">
+            <button id="uploadBtn">crunch your own audio here</button>
+            <input id="userFile" type="file" accept="audio/*" style="display:none">
+        </div>
+        <audio id="userAudio" controls style="display:none; margin:0.5em auto 0;"></audio>
     </div>
     <script>
         document.addEventListener('mousemove', function(e) {
@@ -81,6 +108,7 @@
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         const ctx = new AudioContext();
         const mainAudio = document.getElementById('main-audio');
+        const riffAudio = document.getElementById('riff-audio');
 
         function resumeContext() {
             if (ctx.state === 'suspended') {
@@ -90,21 +118,207 @@
 
         document.addEventListener('play', resumeContext, true);
         const bitDepthRange = document.getElementById('bitDepthRange');
-        const bitDepthValue = document.getElementById('bitDepthValue');
-        const crusher = new Crusher(ctx, parseInt(bitDepthRange.value, 10), 0.2);
+        const crunchValue = document.getElementById('crunchValue');
+        const crusherToggle = document.getElementById('crusherToggle');
+        const superToggle = document.getElementById('superToggle');
+        const calmingContainer = document.getElementById('calmingContainer');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const userFile = document.getElementById('userFile');
+        const userAudio = document.getElementById('userAudio');
+        const crusher = new Crusher(ctx, Math.round(64 - ((bitDepthRange.value - 20) / 80) * 63), 0.2);
+        const crusher2 = new Crusher(ctx, 1, 0.001);
+        const sources = [];
+        const promptAudios = [mainAudio, riffAudio];
+
+        function addSource(audio) {
+            const src = ctx.createMediaElementSource(audio);
+            sources.push(src);
+            src.connect(ctx.destination);
+        }
 
         document.querySelectorAll('audio').forEach(audio => {
-            const src = ctx.createMediaElementSource(audio);
-            src.connect(crusher.input);
+            addSource(audio);
         });
-        crusher.connect(ctx.destination);
+
+        function percentToBits(percent) {
+            return Math.round(64 - ((percent - 20) / 80) * 63);
+        }
+
+        function updateCrunch(percent) {
+            crunchValue.textContent = percent;
+            crusher.bits = percentToBits(percent);
+            if (!superToggle.checked) {
+                crusher2.bits = percentToBits(percent);
+                crusher2.reduction = 0.2;
+            }
+        }
+
+        updateCrunch(bitDepthRange.value);
+
+        const WARNING_MSG = 'no joke this gets extremely loud lol if you are wearing headphones you should probably just take them off. Continue?';
+        const SUPER_MSG = 'this one is actually extremely funny but holy shit it is loud';
+        let loudPrompted = false;
+        let loudConfirmed = false;
+        let superPrompted = false;
+        let superConfirmed = false;
+        let calmingOffered = false;
+        let pauseTimer;
+        let userAdded = false;
+
+        function applyConnections() {
+            sources.forEach(src => src.disconnect());
+            crusher.disconnect();
+            crusher2.disconnect();
+            if (crusherToggle.checked) {
+                const value = parseInt(bitDepthRange.value, 10);
+                if (value > 90 && !loudPrompted) {
+                    loudPrompted = true;
+                    const proceed = confirm(WARNING_MSG);
+                    loudConfirmed = proceed;
+                    if (!proceed) {
+                        crusherToggle.checked = false;
+                        bitDepthRange.value = 20;
+                        updateCrunch(20);
+                        sources.forEach(src => src.connect(ctx.destination));
+                        return;
+                    }
+                } else if (value > 90 && !loudConfirmed) {
+                    crusherToggle.checked = false;
+                    bitDepthRange.value = 20;
+                    updateCrunch(20);
+                    sources.forEach(src => src.connect(ctx.destination));
+                    return;
+                }
+                sources.forEach(src => src.connect(crusher.input));
+                if (superToggle.checked && superConfirmed) {
+                    crusher.connect(crusher2.input);
+                    crusher2.connect(ctx.destination);
+                } else {
+                    crusher.connect(ctx.destination);
+                }
+            } else {
+                sources.forEach(src => src.connect(ctx.destination));
+            }
+        }
 
         bitDepthRange.addEventListener('input', () => {
-            crusher.bits = parseInt(bitDepthRange.value, 10);
-            bitDepthValue.textContent = bitDepthRange.value;
+            const value = parseInt(bitDepthRange.value, 10);
+            if (crusherToggle.checked && value > 90 && !loudPrompted) {
+                loudPrompted = true;
+                const proceed = confirm(WARNING_MSG);
+                loudConfirmed = proceed;
+                if (!proceed) {
+                    crusherToggle.checked = false;
+                    bitDepthRange.value = 20;
+                    updateCrunch(20);
+                    applyConnections();
+                    return;
+                }
+            } else if (crusherToggle.checked && value > 90 && !loudConfirmed) {
+                crusherToggle.checked = false;
+                bitDepthRange.value = 20;
+                updateCrunch(20);
+                applyConnections();
+                return;
+            }
+            updateCrunch(value);
         });
+
+        crusherToggle.addEventListener('change', applyConnections);
+        superToggle.addEventListener('change', () => {
+            if (superToggle.checked) {
+                if (!superPrompted) {
+                    superPrompted = true;
+                    if (!confirm(SUPER_MSG)) {
+                        superConfirmed = false;
+                        superToggle.checked = false;
+                        return;
+                    }
+                    superConfirmed = true;
+                } else if (!superConfirmed) {
+                    superToggle.checked = false;
+                    return;
+                }
+                crusherToggle.checked = true;
+                crusher2.bits = 1;
+                crusher2.reduction = 0.001;
+            } else {
+                crusher2.bits = percentToBits(bitDepthRange.value);
+                crusher2.reduction = 0.2;
+            }
+            applyConnections();
+        });
+
+        function showCalmingEmbed() {
+            if (calmingOffered) return;
+            calmingOffered = true;
+            calmingContainer.innerHTML =
+                '<iframe style="border-radius:12px" src="https://open.spotify.com/embed/playlist/37i9dQZF1DWXe9gFZP0gtP?utm_source=generator" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>' +
+                '<div style="text-align:center;"><button id="closeCalming">[x]</button></div>';
+            document.getElementById('closeCalming').addEventListener('click', () => {
+                calmingContainer.innerHTML = '';
+            });
+        }
+
+        function checkForCalmPrompt() {
+            if (!superToggle.checked || !superConfirmed || calmingOffered) return;
+            clearTimeout(pauseTimer);
+            if (promptAudios.some(a => !a.paused)) return;
+            pauseTimer = setTimeout(() => {
+                if (superToggle.checked && superConfirmed && promptAudios.every(a => a.paused) && !calmingOffered) {
+                    if (confirm("you didn't do anything for 27 seconds after listening to the super crunch... do you need some relaxing music to soothe your nerves and put your mind at ease?")) {
+                        showCalmingEmbed();
+                    } else {
+                        calmingOffered = true;
+                    }
+                }
+            }, 27000);
+        }
+
+        function cancelCalmCheck() {
+            clearTimeout(pauseTimer);
+        }
+
+        promptAudios.forEach(a => {
+            a.addEventListener('pause', checkForCalmPrompt);
+            a.addEventListener('play', cancelCalmCheck);
+            a.addEventListener('ended', checkForCalmPrompt);
+        });
+
+        uploadBtn.addEventListener('click', () => {
+            const msg = "Uploaded files cannot be downloaded in their 'crunched' state. " +
+                "Audio processing happens only in your browser via the Web Audio API. " +
+                "This site is static and any files you add will disappear once you refresh. Continue?";
+            if (confirm(msg)) {
+                userFile.click();
+            }
+        });
+
+        userFile.addEventListener('change', () => {
+            const file = userFile.files[0];
+            if (!file) return;
+            const url = URL.createObjectURL(file);
+            userAudio.src = url;
+            userAudio.style.display = 'block';
+            if (!userAdded) {
+                addSource(userAudio);
+                promptAudios.push(userAudio);
+                userAudio.addEventListener('pause', checkForCalmPrompt);
+                userAudio.addEventListener('play', cancelCalmCheck);
+                userAudio.addEventListener('ended', checkForCalmPrompt);
+                userAdded = true;
+            }
+            applyConnections();
+        });
+
+        applyConnections();
     </script>
-    <footer style="color:#555; text-align:center; margin-top:12em; padding-top:1em; max-width:30em; margin-left:auto; margin-right:auto;">
+    <div class="gradient" style="text-align:center;font-size:small;margin-top:2em;">
+        for my girlfriend, my friends, and my coworkers<br>
+        who have been weezerd many times before.<br>
+        -owen
+    </div>
+    <footer style="color:#555; text-align:center; margin-top:2em; padding-top:1em; max-width:30em; margin-left:auto; margin-right:auto;">
       <small>
         <strong>Fair-Use Notice:</strong> This site includes brief audio excerpts and
         references to copyrighted works that are owned by their respective
@@ -114,7 +328,7 @@
         17 U.S.C. § 107.  No endorsement by, or affiliation with, the copyright
         owners is implied, and all intellectual-property rights remain with them.
         If you are a rights-holder and believe your material has been used beyond
-        what fair use allows, please <a href="mailto:swen.owall@gmail.com">contact us</a>; we will respond promptly.
+        what fair use allows, please <a href="mailto:getweezrdDMCA@gmail.com">contact us</a>; we will respond promptly.
       </small>
     </footer>
 </body>
